@@ -14,7 +14,7 @@ AirQualityAR is a web application that transforms invisible air pollution data i
   ---
 
  # 🛠️ Technologies Used
-- Frontend: HTML5, CSS3, JavaScript (ES6+)
+- Frontend: HTML5, CSS3, JavaScript
 - Styling: Tailwind CSS
 - Data Visualization: Chart.js
 - Mapping: Leaflet

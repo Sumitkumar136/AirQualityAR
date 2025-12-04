@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirQualityAR - See the Air You Breathe</title>
+    <title>AirQualityAR - See Air You Breathe</title>
     
-    <!-- Tailwind CSS for Professional Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Chart.js for Predictive Analytics Graph -->
@@ -18,7 +17,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- TensorFlow.js for ML -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    
     <style>
+        /* Custom CSS for animations and elements */
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -39,7 +42,7 @@
             background-position: center;
         }
         #map {
-            height: 300px;
+            height: 400px;
             border-radius: 0.5rem;
         }
         .loading-spinner {
@@ -58,6 +61,78 @@
             z-index: 999 !important;
         }
         
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        
+        .dark-mode .bg-white {
+            background-color: #2d3748 !important;
+        }
+        
+        .dark-mode .text-gray-800 {
+            color: #e2e8f0 !important;
+        }
+        
+        .dark-mode .text-gray-700 {
+            color: #cbd5e0 !important;
+        }
+        
+        .dark-mode .text-gray-600 {
+            color: #a0aec0 !important;
+        }
+        
+        .dark-mode .text-gray-500 {
+            color: #718096 !important;
+        }
+        
+        .dark-mode .bg-gray-100 {
+            background-color: #2d3748 !important;
+        }
+        
+        .dark-mode .bg-gray-200 {
+            background-color: #1a202c !important;
+        }
+        
+        .dark-mode .border-gray-300 {
+            border-color: #4a5568 !important;
+        }
+        
+        .dark-mode .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-mode .theme-toggle {
+            background-color: #2d3748;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        /* AR View Styles */
         #arView {
             position: fixed;
             top: 0;
@@ -206,6 +281,89 @@
             transform: scale(1.1);
         }
         
+        .ml-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ml-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ml-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .ml-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #667eea;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        
+        .ml-progress {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .ml-progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-in-out;
+        }
+        
+        .anomaly-pulse {
+            animation: anomaly-pulse 2s infinite;
+        }
+        
+        @keyframes anomaly-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .ml-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ml-tab.active {
+            background-color: #667eea;
+            color: white;
+        }
+        
+        .ml-tab-content {
+            display: none;
+        }
+        
+        .ml-tab-content.active {
+            display: block;
+        }
+        
+        .dark-mode .ml-progress {
+            background-color: #4a5568;
+        }
+        
+        .dark-mode .bg-gray-50 {
+            background-color: #2d3748 !important;
+        }
+        
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .hero-image h1 {
                 font-size: 2.5rem;
@@ -219,7 +377,7 @@
                 font-size: 0.9rem;
             }
             #map {
-                height: 250px;
+                height: 300px;
             }
             .section-title {
                 font-size: 2rem;
@@ -271,9 +429,11 @@
                 <a href="#map-section" class="text-gray-600 hover:text-indigo-600 text-sm md:text-base">Map View</a>
                 <a href="#ar-view" class="text-gray-600 hover:text-indigo-600 text-sm md:text-base">AR View</a>
                 <a href="#analytics" class="text-gray-600 hover:text-indigo-600 text-sm md:text-base">Analytics</a>
+                <a href="#ml-insights" class="text-gray-600 hover:text-indigo-600 text-sm md:text-base">ML Insights</a>
                 <a href="#health-impact" class="text-gray-600 hover:text-indigo-600 text-sm md:text-base">Health Impact</a>
             </div>
             
+            <!-- Mobile Menu Button -->
             <button id="mobileMenuBtn" class="md:hidden text-gray-600">
                 <i class="fas fa-bars text-xl md:text-2xl"></i>
             </button>
@@ -287,6 +447,7 @@
                 <a href="#map-section" class="block py-2 text-gray-600 hover:text-indigo-600">Map View</a>
                 <a href="#ar-view" class="block py-2 text-gray-600 hover:text-indigo-600">AR View</a>
                 <a href="#analytics" class="block py-2 text-gray-600 hover:text-indigo-600">Analytics</a>
+                <a href="#ml-insights" class="block py-2 text-gray-600 hover:text-indigo-600">ML Insights</a>
                 <a href="#health-impact" class="block py-2 text-gray-600 hover:text-indigo-600">Health Impact</a>
             </div>
         </div>
@@ -297,8 +458,8 @@
         <section id="home" class="hero-image relative h-screen flex items-center justify-center text-white">
             <div class="absolute inset-0 bg-black opacity-50"></div>
             <div class="relative text-center px-4 md:px-6 max-w-4xl mx-auto">
-                <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">See the Air You Breathe</h1>
-                <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8">Transforming invisible pollution data into immersive, actionable insights.</p>
+                <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">See Air You Breathe</h1>
+                <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8">Transforming invisible pollution data into immersive, actionable insights powered by AI.</p>
                 <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
                     <button onclick="scrollToSection('dashboard')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 md:py-3 md:px-8 rounded-full transition duration-300">
                         <i class="fas fa-map-marked-alt mr-2"></i>View Your City's Air
@@ -316,6 +477,7 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4 section-title">Real-Time Air Quality Dashboard</h2>
                 <p class="text-center text-gray-600 mb-6 md:mb-8 px-4">Enter your city to get live pollution data from monitoring stations worldwide.</p>
                 
+                <!-- City Search -->
                 <div class="max-w-xl mx-auto mb-8 md:mb-12 flex">
                     <input type="text" id="cityInput" placeholder="e.g., Delhi, Mumbai, Beijing, London" class="w-full px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:border-indigo-500 text-sm md:text-base">
                     <button onclick="updateDashboard()" class="bg-indigo-600 text-white px-4 md:px-6 py-3 rounded-r-lg hover:bg-indigo-700 transition duration-300">
@@ -323,15 +485,19 @@
                     </button>
                 </div>
 
+                <!-- Loading Indicator -->
                 <div id="loadingIndicator" class="hidden justify-center mb-8">
                     <div class="loading-spinner"></div>
                 </div>
 
+                <!-- Error Message -->
                 <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 max-w-xl mx-auto">
                     <p id="errorText"></p>
                 </div>
 
+                <!-- Data Display -->
                 <div id="dataDisplay" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 card-container">
+                    <!-- AQI Card -->
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 text-center">
                         <h3 class="text-base md:text-lg font-semibold text-gray-700 mb-2">Air Quality Index (AQI)</h3>
                         <div class="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
@@ -346,6 +512,7 @@
                         <p id="aqiStatus" class="text-sm font-medium text-green-600">Good</p>
                     </div>
 
+                    <!-- PM2.5 Card -->
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 text-center">
                         <i class="fas fa-smog text-3xl md:text-4xl text-gray-500 mb-4"></i>
                         <h3 class="text-base md:text-lg font-semibold text-gray-700 mb-2">PM2.5</h3>
@@ -353,6 +520,7 @@
                         <p class="text-sm text-gray-500">µg/m³</p>
                     </div>
 
+                    <!-- NO2 Card -->
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 text-center">
                         <i class="fas fa-cloud text-3xl md:text-4xl text-yellow-500 mb-4"></i>
                         <h3 class="text-base md:text-lg font-semibold text-gray-700 mb-2">NO₂</h3>
@@ -360,6 +528,7 @@
                         <p class="text-sm text-gray-500">ppb</p>
                     </div>
 
+                    <!-- O3 Card -->
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 text-center">
                         <i class="fas fa-sun text-3xl md:text-4xl text-orange-500 mb-4"></i>
                         <h3 class="text-base md:text-lg font-semibold text-gray-700 mb-2">O₃</h3>
@@ -368,6 +537,7 @@
                     </div>
                 </div>
 
+                <!-- Additional Info -->
                 <div id="additionalInfo" class="mt-6 md:mt-8 bg-white rounded-lg shadow-lg p-4 md:p-6 hidden">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-800 mb-4">Station Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -389,7 +559,39 @@
             <div class="container mx-auto px-4 md:px-6">
                 <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4 section-title">Air Quality Map</h2>
                 <p class="text-center text-gray-600 mb-6 md:mb-8 px-4">Explore air quality data from monitoring stations around the world.</p>
+                
+                <!-- Map Controls -->
+                <div class="flex justify-center mb-4">
+                    <div class="bg-white rounded-lg shadow p-2 flex space-x-2">
+                        <button id="markerViewBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Marker View
+                        </button>
+                        <button id="boundaryHeatmapBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">
+                            <i class="fas fa-map mr-2"></i>Boundary Heatmap
+                        </button>
+                    </div>
+                </div>
+                
                 <div id="map" class="shadow-lg"></div>
+                
+                <!-- Heatmap Legend -->
+                <div id="heatmapLegend" class="hidden mt-4 flex justify-center">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Air Quality Index</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs">0</span>
+                            <div class="w-48 h-4 rounded" style="background: linear-gradient(to right, green, yellow, orange, red, darkred);"></div>
+                            <span class="text-xs">300+</span>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-xs text-green-600">Good</span>
+                            <span class="text-xs text-yellow-600">Moderate</span>
+                            <span class="text-xs text-orange-600">Unhealthy</span>
+                            <span class="text-xs text-red-600">Very Unhealthy</span>
+                            <span class="text-xs text-red-900">Hazardous</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -430,6 +632,176 @@
             </div>
         </section>
 
+        <!-- ML Insights Section -->
+        <section id="ml-insights" class="py-12 md:py-16">
+            <div class="container mx-auto px-4 md:px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4 section-title">AI-Powered Insights</h2>
+                <p class="text-center text-gray-600 mb-6 md:mb-12 px-4">Our machine learning models analyze air quality patterns to provide deeper insights and predictions.</p>
+                
+                <!-- ML Insights Tabs -->
+                <div class="flex flex-wrap justify-center mb-8">
+                    <button id="tab-anomaly" class="ml-tab px-4 py-2 m-1 rounded-lg bg-gray-200 text-gray-700 font-medium active" onclick="switchTab('anomaly')">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Anomaly Detection
+                    </button>
+                    <button id="tab-source" class="ml-tab px-4 py-2 m-1 rounded-lg bg-gray-200 text-gray-700 font-medium" onclick="switchTab('source')">
+                        <i class="fas fa-industry mr-2"></i>Pollution Sources
+                    </button>
+                    <button id="tab-health" class="ml-tab px-4 py-2 m-1 rounded-lg bg-gray-200 text-gray-700 font-medium" onclick="switchTab('health')">
+                        <i class="fas fa-heartbeat mr-2"></i>Health Recommendations
+                    </button>
+                </div>
+                
+                <!-- Tab Content -->
+                <div id="content-anomaly" class="ml-tab-content active">
+                    <div class="ml-card bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+                        <span class="ml-badge">ML</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Anomaly Detection</h3>
+                        <p class="text-gray-600 mb-4">Our AI detects unusual pollution patterns that might indicate special events or sensor malfunctions.</p>
+                        
+                        <div id="anomalyStatus" class="mb-4">
+                            <div class="flex items-center mb-2">
+                                <div id="anomalyIndicator" class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                <span id="anomalyStatusText" class="text-sm font-medium">Normal Patterns Detected</span>
+                            </div>
+                            <p id="anomalyDescription" class="text-sm text-gray-500">No unusual pollution patterns detected in the last 24 hours.</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h4 class="font-semibold text-gray-700 mb-2">Recent Anomalies</h4>
+                            <div id="anomalyList" class="space-y-2 max-h-64 overflow-y-auto">
+                                <p class="text-sm text-gray-500">No anomalies detected</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="runAnomalyDetection()" class="bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i>Run Detection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="content-source" class="ml-tab-content">
+                    <div class="ml-card bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+                        <span class="ml-badge">ML</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Pollution Source Prediction</h3>
+                        <p class="text-gray-600 mb-4">Our AI analyzes pollution patterns to identify likely sources of air pollution in your area.</p>
+                        
+                        <div id="sourcePrediction" class="space-y-3">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Traffic</span>
+                                    <span id="trafficPercent" class="text-sm text-gray-500">0%</span>
+                                </div>
+                                <div class="ml-progress">
+                                    <div id="trafficBar" class="ml-progress-bar bg-blue-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Industrial</span>
+                                    <span id="industrialPercent" class="text-sm text-gray-500">0%</span>
+                                </div>
+                                <div class="ml-progress">
+                                    <div id="industrialBar" class="ml-progress-bar bg-gray-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Residential</span>
+                                    <span id="residentialPercent" class="text-sm text-gray-500">0%</span>
+                                </div>
+                                <div class="ml-progress">
+                                    <div id="residentialBar" class="ml-progress-bar bg-green-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Natural</span>
+                                    <span id="naturalPercent" class="text-sm text-gray-500">0%</span>
+                                </div>
+                                <div class="ml-progress">
+                                    <div id="naturalBar" class="ml-progress-bar bg-yellow-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-semibold text-gray-700 mb-2">Source Analysis</h4>
+                            <p id="sourceAnalysis" class="text-sm text-gray-600">Click "Analyze Sources" to get detailed information about pollution sources in your area.</p>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="runSourcePrediction()" class="bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i>Analyze Sources
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="content-health" class="ml-tab-content">
+                    <div class="ml-card bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+                        <span class="ml-badge">ML</span>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Personalized Health Recommendations</h3>
+                        <p class="text-gray-600 mb-4">Based on your health profile and current air quality, our AI provides personalized recommendations.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">Health Profile</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="respiratory" class="mr-2">
+                                        <label for="respiratory" class="text-sm">Respiratory Conditions</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="cardiovascular" class="mr-2">
+                                        <label for="cardiovascular" class="text-sm">Cardiovascular Conditions</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="elderly" class="mr-2">
+                                        <label for="elderly" class="text-sm">Elderly (65+)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="children" class="mr-2">
+                                        <label for="children" class="text-sm">Children (Under 12)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="pregnant" class="mr-2">
+                                        <label for="pregnant" class="text-sm">Pregnant</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-2">AI Recommendations</h4>
+                                <div id="healthRecommendations" class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                    <p class="text-sm text-gray-500">Select your health profile to get personalized recommendations.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-semibold text-gray-700 mb-2">Health Risk Assessment</h4>
+                            <div class="flex items-center mb-2">
+                                <span class="text-sm text-gray-600 mr-2">Current Risk Level:</span>
+                                <span id="riskLevel" class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">Low</span>
+                            </div>
+                            <p id="riskAssessment" class="text-sm text-gray-600">Based on current air quality and your health profile.</p>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="generateHealthRecommendations()" class="bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
+                                <i class="fas fa-magic mr-2"></i>Generate Recommendations
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Health Impact Section -->
         <section id="health-impact" class="py-12 md:py-16">
             <div class="container mx-auto px-4 md:px-6">
@@ -437,6 +809,7 @@
                 <p class="text-center text-gray-600 mb-6 md:mb-12 px-4">Understand how different pollution levels affect your health and what precautions you should take.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    <!-- Good (0-50) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-green-500">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-green-100 rounded-full p-3 mr-4">
@@ -458,6 +831,7 @@
                         </div>
                     </div>
                     
+                    <!-- Moderate (51-100) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-yellow-500">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-yellow-100 rounded-full p-3 mr-4">
@@ -479,6 +853,7 @@
                         </div>
                     </div>
                     
+                    <!-- Unhealthy for Sensitive (101-150) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-orange-500">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-orange-100 rounded-full p-3 mr-4">
@@ -500,6 +875,7 @@
                         </div>
                     </div>
                     
+                    <!-- Unhealthy (151-200) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-500">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-red-100 rounded-full p-3 mr-4">
@@ -521,6 +897,7 @@
                         </div>
                     </div>
                     
+                    <!-- Very Unhealthy (201-300) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-purple-500">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-purple-100 rounded-full p-3 mr-4">
@@ -542,6 +919,7 @@
                         </div>
                     </div>
                     
+                    <!-- Hazardous (301+) -->
                     <div class="health-card bg-white rounded-lg shadow-lg p-6 border-t-4 border-red-900">
                         <div class="flex items-center mb-4">
                             <div class="health-icon bg-red-100 rounded-full p-3 mr-4">
@@ -605,13 +983,20 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-6 md:py-8">
         <div class="container mx-auto px-4 md:px-6 text-center">
-            <p>&copy; 2025 AirQualityAR. All Rights Reserved.</p>
+            <p>&copy; 2024 Sumit kumar. All Rights Reserved.</p>
             <div class="mt-4 space-x-4">
+                <!-- <a href="#" class="hover:text-indigo-400"><i class="fab fa-twitter"></i></a> -->
+                <a href="#" class="hover:text-indigo-400"><i class="fab fa-facebook"></i></a>
                 <a href="https://www.linkedin.com/in/sumit-kumar-ai/" class="hover:text-indigo-400"><i class="fab fa-linkedin"></i></a>
                 <a href="https://github.com/Sumitkumar136" class="hover:text-indigo-400"><i class="fab fa-github"></i></a>
             </div>
         </div>
     </footer>
+
+    <!-- Dark Mode Toggle Button -->
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon text-gray-700" id="themeIcon"></i>
+    </div>
 
     <!-- AR View Modal -->
     <div id="arView">
@@ -687,6 +1072,7 @@
         
         // Global variables
         let map;
+        let boundaryLayer;
         let currentMarker;
         let forecastChart;
         let currentCity = '';
@@ -694,6 +1080,33 @@
         let arPollutionData = {};
         let arAnimationId;
         let userLocation = { lat: null, lon: null };
+        let historicalData = [];
+        let anomalyModel;
+        let isModelTrained = false;
+        let currentViewMode = 'marker'; // 'marker' or 'boundary'
+        
+        // Dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun text-yellow-400';
+            }
+            
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                const themeIcon = document.getElementById('themeIcon');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeIcon.className = 'fas fa-sun text-yellow-400';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.className = 'fas fa-moon text-gray-700';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
         
         // Mobile menu toggle
         document.getElementById('mobileMenuBtn').addEventListener('click', function() {
@@ -708,6 +1121,28 @@
             });
         });
         
+        function switchTab(tabName) {
+            document.querySelectorAll('.ml-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.ml-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            if (tabName === 'anomaly') {
+                runAnomalyDetection();
+            } else if (tabName === 'source') {
+                runSourcePrediction();
+            } else if (tabName === 'health') {
+                // Don't auto-run health recommendations as it requires user input
+            }
+        }
+        
         // Initialize map
         function initMap() {
             map = L.map('map').setView([20, 0], 2);
@@ -716,7 +1151,8 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             
-            // Add click event to map
+            boundaryLayer = L.layerGroup().addTo(map);
+            
             map.on('click', function(e) {
                 const lat = e.latlng.lat.toFixed(4);
                 const lon = e.latlng.lng.toFixed(4);
@@ -724,7 +1160,90 @@
             });
         }
         
-        // Fetch air quality data by city name
+        // Create boundary heatmap for cities/states
+        async function createBoundaryHeatmap(centerLat, centerLon, radiusKm = 50) {
+            showLoading(true);
+            
+            boundaryLayer.clearLayers();
+            
+            const gridSize = 10; // 10x10 grid
+            const step = radiusKm / gridSize;
+            
+            for (let latOffset = -radiusKm; latOffset <= radiusKm; latOffset += step * 2) {
+                for (let lonOffset = -radiusKm; lonOffset <= radiusKm; lonOffset += step * 2) {
+                    // Convert km offsets to approximate lat/lon offsets
+                    const lat = parseFloat(centerLat) + latOffset / 111;
+                    const lon = parseFloat(centerLon) + lonOffset / (111 * Math.cos(parseFloat(centerLat) * Math.PI / 180));
+                    
+                    const bounds = [
+                        [lat, lon],
+                        [lat + step / 111, lon + step / (111 * Math.cos(parseFloat(centerLat) * Math.PI / 180))]
+                    ];
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}geo:${lat.toFixed(4)};${lon.toFixed(4)}/?token=${API_KEY}`);
+                        const data = await response.json();
+                        
+                        if (data.status === 'ok' && data.data) {
+                            const aqi = data.data.aqi;
+                            const color = getAQIColor(aqi);
+                            const opacity = 0.6; // Semi-transparent
+                            
+                            const rectangle = L.rectangle(bounds, {
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: opacity,
+                                weight: 1
+                            });
+                            
+                            rectangle.bindPopup(`
+                                <div>
+                                    <b>AQI: ${aqi}</b><br>
+                                    ${getStatusText(aqi)}<br>
+                                    <small>Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}</small>
+                                </div>
+                            `);
+                            
+                            // Add to boundary layer
+                            rectangle.addTo(boundaryLayer);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching data for boundary:', error);
+                    }
+                }
+            }
+            
+            showLoading(false);
+        }
+        
+        // Map view toggle event handlers
+        document.getElementById('markerViewBtn').addEventListener('click', function() {
+            currentViewMode = 'marker';
+            if (boundaryLayer) {
+                map.removeLayer(boundaryLayer);
+            }
+            document.getElementById('heatmapLegend').classList.add('hidden');
+            
+            this.className = 'px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium';
+            document.getElementById('boundaryHeatmapBtn').className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium';
+        });
+
+        document.getElementById('boundaryHeatmapBtn').addEventListener('click', function() {
+            currentViewMode = 'boundary';
+            if (boundaryLayer) {
+                map.removeLayer(boundaryLayer);
+            }
+            boundaryLayer.addTo(map);
+            document.getElementById('heatmapLegend').classList.remove('hidden');
+            
+            this.className = 'px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium';
+            document.getElementById('markerViewBtn').className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium';
+            
+            if (userLocation.lat && userLocation.lon) {
+                createBoundaryHeatmap(userLocation.lat, userLocation.lon);
+            }
+        });
+        
         async function fetchAirQualityByCity(city) {
             showLoading(true);
             hideError();
@@ -737,6 +1256,8 @@
                     updateDashboardWithRealData(data.data);
                     currentCity = city;
                     updateMap(data.data);
+                    
+                    storeHistoricalData(data.data);
                 } else {
                     showError(`Could not find air quality data for "${city}". Please try another city.`);
                 }
@@ -747,7 +1268,6 @@
             }
         }
         
-        // Fetch air quality data by coordinates
         async function fetchAirQualityByCoords(lat, lon) {
             showLoading(true);
             hideError();
@@ -760,9 +1280,14 @@
                     updateDashboardWithRealData(data.data);
                     updateMap(data.data);
                     
-                    // Store user location
                     userLocation.lat = lat;
                     userLocation.lon = lon;
+                    
+                    storeHistoricalData(data.data);
+                    
+                    if (currentViewMode === 'boundary') {
+                        await createBoundaryHeatmap(lat, lon);
+                    }
                     
                     return data.data;
                 } else {
@@ -777,7 +1302,219 @@
             }
         }
         
+        // Store historical data for ML analysis
+        function storeHistoricalData(data) {
+            const timestamp = new Date().getTime();
+            const historicalEntry = {
+                timestamp: timestamp,
+                aqi: data.aqi,
+                pm25: data.iaqi && data.iaqi.pm25 ? data.iaqi.pm25.v : 0,
+                no2: data.iaqi && data.iaqi.no2 ? data.iaqi.no2.v : 0,
+                o3: data.iaqi && data.iaqi.o3 ? data.iaqi.o3.v : 0,
+                city: data.city.name || 'Unknown'
+            };
+            
+            historicalData.push(historicalEntry);
+            
+            // Keep only the last 30 days of data
+            const thirtyDaysAgo = timestamp - (30 * 24 * 60 * 60 * 1000);
+            historicalData = historicalData.filter(entry => entry.timestamp > thirtyDaysAgo);
+            
+            // Save to localStorage
+            localStorage.setItem('airQualityHistoricalData', JSON.stringify(historicalData));
+            
+            // Train anomaly model if we have enough data
+            if (historicalData.length >= 10 && !isModelTrained) {
+                trainAnomalyModel();
+            }
+        }
         
+        // Load historical data from localStorage
+        function loadHistoricalData() {
+            const storedData = localStorage.getItem('airQualityHistoricalData');
+            if (storedData) {
+                historicalData = JSON.parse(storedData);
+                
+                if (historicalData.length >= 10) {
+                    trainAnomalyModel();
+                }
+            }
+        }
+        
+        // Train anomaly detection model
+        async function trainAnomalyModel() {
+            if (historicalData.length < 10) return;
+            
+            try {
+                anomalyModel = tf.sequential({
+                    layers: [
+                        tf.layers.dense({inputShape: [4], units: 16, activation: 'relu'}),
+                        tf.layers.dropout({rate: 0.2}),
+                        tf.layers.dense({units: 8, activation: 'relu'}),
+                        tf.layers.dropout({rate: 0.2}),
+                        tf.layers.dense({units: 1, activation: 'sigmoid'})
+                    ]
+                });
+                
+                anomalyModel.compile({
+                    optimizer: 'adam',
+                    loss: 'binaryCrossentropy',
+                    metrics: ['accuracy']
+                });
+                
+                const features = historicalData.slice(-20).map(entry => [
+                    entry.aqi / 500,  // Normalize AQI to 0-1 range
+                    entry.pm25 / 500,  // Normalize PM2.5 to 0-1 range
+                    entry.no2 / 200,   // Normalize NO2 to 0-1 range
+                    entry.o3 / 200     // Normalize O3 to 0-1 range
+                ]);
+                
+                const trainingData = features.slice(0, features.length - 2);
+                const trainingLabels = new Array(trainingData.length).fill(0); // All normal data
+                
+                const testData = features.slice(-2);
+                
+                const xs = tf.tensor2d(trainingData);
+                const ys = tf.tensor2d(trainingLabels, [trainingLabels.length, 1]);
+                
+                await anomalyModel.fit(xs, ys, {
+                    epochs: 50,
+                    batchSize: 4,
+                    shuffle: true,
+                    callbacks: {
+                        onEpochEnd: (epoch, logs) => {
+                            console.log(`Epoch ${epoch}: loss = ${logs.loss}`);
+                        }
+                    }
+                });
+                
+                isModelTrained = true;
+                console.log('Anomaly detection model trained successfully');
+                
+                // Clean up tensors
+                xs.dispose();
+                ys.dispose();
+            } catch (error) {
+                console.error('Error training anomaly model:', error);
+            }
+        }
+        
+        // Update dashboard with real API data
+        function updateDashboardWithRealData(data) {
+            // Extract AQI value
+            const aqi = data.aqi;
+            
+            const aqiValueEl = document.getElementById('aqiValue');
+            const aqiStatusEl = document.getElementById('aqiStatus');
+            const aqiCircle = document.getElementById('aqiCircle');
+            
+            aqiValueEl.textContent = aqi;
+            
+            let status, color;
+            if (aqi <= 50) {
+                status = 'Good';
+                color = '#10b981'; // green
+            } else if (aqi <= 100) {
+                status = 'Moderate';
+                color = '#eab308'; // yellow
+            } else if (aqi <= 150) {
+                status = 'Unhealthy for Sensitive';
+                color = '#f97316'; // orange
+            } else if (aqi <= 200) {
+                status = 'Unhealthy';
+                color = '#ef4444'; // red
+            } else if (aqi <= 300) {
+                status = 'Very Unhealthy';
+                color = '#a855f7'; // purple
+            } else {
+                status = 'Hazardous';
+                color = '#7c2d12'; // brown
+            }
+            
+            aqiStatusEl.textContent = status;
+            aqiCircle.style.stroke = color;
+            
+            const circumference = 2 * Math.PI * 40;
+            const offset = circumference - (Math.min(aqi, 500) / 500) * circumference;
+            aqiCircle.style.strokeDashoffset = offset;
+            
+            if (data.iaqi) {
+                if (data.iaqi.pm25) {
+                    document.getElementById('pm25Value').textContent = data.iaqi.pm25.v;
+                } else {
+                    document.getElementById('pm25Value').textContent = 'N/A';
+                }
+                
+                if (data.iaqi.no2) {
+                    document.getElementById('no2Value').textContent = data.iaqi.no2.v;
+                } else {
+                    document.getElementById('no2Value').textContent = 'N/A';
+                }
+                
+                if (data.iaqi.o3) {
+                    document.getElementById('o3Value').textContent = data.iaqi.o3.v;
+                } else {
+                    document.getElementById('o3Value').textContent = 'N/A';
+                }
+            }
+            
+            // Update additional info
+            document.getElementById('stationName').textContent = data.city.name || 'Unknown Station';
+            document.getElementById('lastUpdated').textContent = new Date(data.time.s).toLocaleString();
+            document.getElementById('additionalInfo').classList.remove('hidden');
+            
+            updateForecastChart();
+            
+            arPollutionData = {
+                aqi: aqi,
+                status: status,
+                color: color,
+                pm25: data.iaqi && data.iaqi.pm25 ? data.iaqi.pm25.v : 'N/A',
+                no2: data.iaqi && data.iaqi.no2 ? data.iaqi.no2.v : 'N/A',
+                o3: data.iaqi && data.iaqi.o3 ? data.iaqi.o3.v : 'N/A',
+                location: data.city.name || 'Unknown Location'
+            };
+        }
+        
+        function updateMap(data) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            if (data.city && data.city.geo && data.city.geo.length === 2) {
+                const lat = data.city.geo[0];
+                const lon = data.city.geo[1];
+                
+                let markerColor;
+                if (data.aqi <= 50) {
+                    markerColor = 'green';
+                } else if (data.aqi <= 100) {
+                    markerColor = 'yellow';
+                } else if (data.aqi <= 150) {
+                    markerColor = 'orange';
+                } else if (data.aqi <= 200) {
+                    markerColor = 'red';
+                } else if (data.aqi <= 300) {
+                    markerColor = 'purple';
+                } else {
+                    markerColor = 'darkred';
+                }
+                
+                const customIcon = L.divIcon({
+                    html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
+                    iconSize: [20, 20],
+                    className: 'custom-div-icon'
+                });
+                
+                currentMarker = L.marker([lat, lon], { icon: customIcon }).addTo(map);
+                currentMarker.bindPopup(`<b>${data.city.name}</b><br>AQI: ${data.aqi}<br>${getStatusText(data.aqi)}`).openPopup();
+                
+                // Center map on this location
+                map.setView([lat, lon], 10);
+            }
+        }
+        
+        // Get status text based on AQI value
         function getStatusText(aqi) {
             if (aqi <= 50) return 'Good';
             else if (aqi <= 100) return 'Moderate';
@@ -787,20 +1524,32 @@
             else return 'Hazardous';
         }
         
+        function getAQIColor(aqi) {
+            if (aqi <= 50) return '#10b981'; // green
+            else if (aqi <= 100) return '#eab308'; // yellow
+            else if (aqi <= 150) return '#f97316'; // orange
+            else if (aqi <= 200) return '#ef4444'; // red
+            else if (aqi <= 300) return '#a855f7'; // purple
+            else return '#7c2d12'; // brown
+        }
+        
+        // Update forecast chart
         function updateForecastChart() {
             const currentAQI = parseInt(document.getElementById('aqiValue').textContent);
             const forecastData = [];
             
             for (let i = 0; i < 9; i++) {
-                const variation = Math.random() * 40 - 20; 
+                const variation = Math.random() * 40 - 20; // Random variation between -20 and +20
                 const forecastValue = Math.max(0, currentAQI + variation);
                 forecastData.push(Math.round(forecastValue));
             }
             
+            // Update chart data
             forecastChart.data.datasets[0].data = forecastData;
             forecastChart.update();
         }
         
+        // Show/hide loading indicator
         function showLoading(show) {
             const loadingIndicator = document.getElementById('loadingIndicator');
             if (show) {
@@ -812,6 +1561,7 @@
             }
         }
         
+        // Show error message
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
@@ -819,10 +1569,12 @@
             errorElement.classList.remove('hidden');
         }
         
+        // Hide error message
         function hideError() {
             document.getElementById('errorMessage').classList.add('hidden');
         }
         
+        // Update dashboard when user searches for a city
         function updateDashboard() {
             const cityInput = document.getElementById('cityInput');
             const city = cityInput.value.trim();
@@ -834,10 +1586,12 @@
             }
         }
         
+        // Smooth scroll to section
         function scrollToSection(sectionId) {
             document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
         }
         
+        // AR View Functions
         function openARView() {
             const arView = document.getElementById('arView');
             const arCamera = document.getElementById('arCamera');
@@ -855,6 +1609,7 @@
                 arStream = stream;
                 arCamera.srcObject = stream;
                 
+                // Get current location and fetch air quality data
                 getCurrentLocationForAR();
             })
             .catch(function(err) {
@@ -867,10 +1622,12 @@
         function closeARView() {
             const arView = document.getElementById('arView');
             
+            // Stop camera stream
             if (arStream) {
                 arStream.getTracks().forEach(track => track.stop());
             }
             
+            // Cancel animation
             if (arAnimationId) {
                 cancelAnimationFrame(arAnimationId);
             }
@@ -879,18 +1636,22 @@
         }
         
         function getCurrentLocationForAR() {
+            // Get user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     async position => {
                         const lat = position.coords.latitude.toFixed(4);
                         const lon = position.coords.longitude.toFixed(4);
                         
+                        // Store user location
                         userLocation.lat = lat;
                         userLocation.lon = lon;
                         
+                        // Fetch air quality data for current location
                         const data = await fetchAirQualityByCoords(lat, lon);
                         
                         if (data) {
+                            // Update AR pollution data
                             arPollutionData = {
                                 aqi: data.aqi,
                                 status: getStatusText(data.aqi),
@@ -901,41 +1662,39 @@
                                 location: data.city.name || 'Current Location'
                             };
                             
+                            // Update AR location info
                             updateARLocationInfo();
                             
+                            // Start AR overlay animation
                             startAROverlay();
                         }
                         
+                        // Hide loading indicator
                         document.getElementById('arLoading').style.display = 'none';
                     },
                     error => {
                         console.error('Error getting location:', error);
                         
+                        // If geolocation fails, use the last known data
                         if (Object.keys(arPollutionData).length > 0) {
                             updateARLocationInfo();
                             startAROverlay();
                         }
                         
+                        // Hide loading indicator
                         document.getElementById('arLoading').style.display = 'none';
                     }
                 );
             } else {
+                // If geolocation is not supported, use the last known data
                 if (Object.keys(arPollutionData).length > 0) {
                     updateARLocationInfo();
                     startAROverlay();
                 }
                 
+                // Hide loading indicator
                 document.getElementById('arLoading').style.display = 'none';
             }
-        }
-        
-        function getAQIColor(aqi) {
-            if (aqi <= 50) return '#10b981'; // green
-            else if (aqi <= 100) return '#eab308'; // yellow
-            else if (aqi <= 150) return '#f97316'; // orange
-            else if (aqi <= 200) return '#ef4444'; // red
-            else if (aqi <= 300) return '#a855f7'; // purple
-            else return '#7c2d12'; // brown
         }
         
         function updateARLocationInfo() {
@@ -945,15 +1704,119 @@
             document.getElementById('arNO2').textContent = arPollutionData.no2 || '--';
         }
         
+        function startAROverlay() {
+            const arOverlay = document.getElementById('arOverlay');
+            const ctx = arOverlay.getContext('2d');
+            
+            // Set canvas size to match video
+            arOverlay.width = window.innerWidth;
+            arOverlay.height = window.innerHeight;
+            
+            // Generate pollution indicators based on real data
+            const indicators = [];
+            
+            // If we have real data, use it to generate indicators
+            if (arPollutionData.aqi) {
+                // Create indicators around the current location with varying AQI values
+                for (let i = 0; i < 5; i++) {
+                    // Create a variation of the current AQI
+                    const aqiVariation = arPollutionData.aqi + (Math.random() * 40 - 20);
+                    const aqi = Math.max(0, Math.min(500, aqiVariation));
+                    
+                    indicators.push({
+                        x: Math.random() * arOverlay.width,
+                        y: Math.random() * arOverlay.height,
+                        size: 60 + Math.random() * 40,
+                        aqi: Math.round(aqi),
+                        type: ['PM2.5', 'NO2', 'O3'][Math.floor(Math.random() * 3)]
+                    });
+                }
+            } else {
+                // Fallback to random indicators if no data is available
+                for (let i = 0; i < 5; i++) {
+                    indicators.push({
+                        x: Math.random() * arOverlay.width,
+                        y: Math.random() * arOverlay.height,
+                        size: 60 + Math.random() * 40,
+                        aqi: Math.floor(Math.random() * 200),
+                        type: ['PM2.5', 'NO2', 'O3'][Math.floor(Math.random() * 3)]
+                    });
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, arOverlay.width, arOverlay.height);
+                
+                // Draw pollution indicators
+                indicators.forEach(indicator => {
+                    // Update position slightly for floating effect
+                    indicator.y += Math.sin(Date.now() * 0.001 + indicator.x) * 0.2;
+                    
+                    // Determine color based on AQI
+                    let color;
+                    if (indicator.aqi <= 50) {
+                        color = 'rgba(16, 185, 129, 0.7)'; // green
+                    } else if (indicator.aqi <= 100) {
+                        color = 'rgba(234, 179, 8, 0.7)'; // yellow
+                    } else if (indicator.aqi <= 150) {
+                        color = 'rgba(249, 115, 22, 0.7)'; // orange
+                    } else {
+                        color = 'rgba(239, 68, 68, 0.7)'; // red
+                    }
+                    
+                    // Draw circle
+                    ctx.beginPath();
+                    ctx.arc(indicator.x, indicator.y, indicator.size, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    
+                    // Draw text
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(indicator.type, indicator.x, indicator.y - 5);
+                    ctx.fillText(indicator.aqi, indicator.x, indicator.y + 15);
+                });
+                
+                // Draw current location indicator with real data
+                if (arPollutionData.aqi) {
+                    const centerX = arOverlay.width / 2;
+                    const centerY = arOverlay.height / 2;
+                    
+                    // Draw circle
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
+                    ctx.fillStyle = arPollutionData.color + '99'; // Add transparency
+                    ctx.fill();
+                    
+                    // Draw text
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Current Location', centerX, centerY - 20);
+                    ctx.font = 'bold 24px Arial';
+                    ctx.fillText('AQI: ' + arPollutionData.aqi, centerX, centerY + 10);
+                    ctx.font = '16px Arial';
+                    ctx.fillText(arPollutionData.status, centerX, centerY + 35);
+                }
+                
+                arAnimationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
         
         function refreshARData() {
             const arLoading = document.getElementById('arLoading');
             arLoading.style.display = 'block';
             
+            // Cancel current animation
             if (arAnimationId) {
                 cancelAnimationFrame(arAnimationId);
             }
             
+            // Get current location and fetch fresh data
             getCurrentLocationForAR();
         }
         
@@ -961,6 +1824,7 @@
             const arCamera = document.getElementById('arCamera');
             const arOverlay = document.getElementById('arOverlay');
             
+            // Create a temporary canvas to merge video and overlay
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = arOverlay.width;
             tempCanvas.height = arOverlay.height;
@@ -988,9 +1852,375 @@
             infoPanel.style.display = infoPanel.style.display === 'none' ? 'block' : 'none';
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
+        // ML Functions
+        
+        // Run anomaly detection
+        async function runAnomalyDetection() {
+            // Show loading state
+            document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+            document.getElementById('anomalyStatusText').textContent = 'Analyzing Data...';
+            document.getElementById('anomalyDescription').textContent = 'Our AI is analyzing pollution patterns for anomalies.';
+            document.getElementById('anomalyList').innerHTML = '<p class="text-sm text-gray-500">Analyzing data...</p>';
+            
+            // If we don't have enough data, show a message
+            if (historicalData.length < 5) {
+                document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+                document.getElementById('anomalyStatusText').textContent = 'Insufficient Data';
+                document.getElementById('anomalyDescription').textContent = 'Need at least 5 data points for anomaly detection. Check back later after using the app more.';
+                document.getElementById('anomalyList').innerHTML = '<p class="text-sm text-gray-500">Collecting more data...</p>';
+                return;
+            }
+            
+            // If model is not trained yet, train it
+            if (!isModelTrained) {
+                await trainAnomalyModel();
+            }
+            
+            // If we still don't have a trained model, use a simpler approach
+            if (!isModelTrained || !anomalyModel) {
+                // Use statistical approach instead of ML model
+                runStatisticalAnomalyDetection();
+                return;
+            }
+            
+            try {
+                // Get the most recent data point
+                const latestData = historicalData[historicalData.length - 1];
+                
+                // Normalize features
+                const features = tf.tensor2d([[
+                    latestData.aqi / 500,  // Normalize AQI to 0-1 range
+                    latestData.pm25 / 500,  // Normalize PM2.5 to 0-1 range
+                    latestData.no2 / 200,   // Normalize NO2 to 0-1 range
+                    latestData.o3 / 200     // Normalize O3 to 0-1 range
+                ]]);
+                
+                // Make prediction
+                const prediction = await anomalyModel.predict(features).data();
+                
+                // Clean up tensor
+                features.dispose();
+                
+                // Check if it's an anomaly (prediction > 0.5)
+                const isAnomaly = prediction[0] > 0.5;
+                const confidence = prediction[0];
+                
+                if (isAnomaly) {
+                    document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-red-500 mr-2 anomaly-pulse';
+                    document.getElementById('anomalyStatusText').textContent = 'Anomaly Detected';
+                    document.getElementById('anomalyDescription').textContent = `Unusual pollution pattern detected with ${(confidence * 100).toFixed(1)}% confidence.`;
+                    
+                    // Add to anomaly list
+                    const anomalyList = document.getElementById('anomalyList');
+                    const date = new Date(latestData.timestamp);
+                    const timeStr = date.toLocaleString();
+                    
+                    const item = document.createElement('div');
+                    item.className = 'bg-red-50 rounded p-2 mb-2';
+                    item.innerHTML = `
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium">AQI: ${latestData.aqi}</span>
+                            <span class="text-xs text-gray-500">${timeStr}</span>
+                        </div>
+                        <div class="text-xs text-gray-600">Confidence: ${(confidence * 100).toFixed(1)}%</div>
+                    `;
+                    
+                    // Clear previous content and add new item
+                    anomalyList.innerHTML = '';
+                    anomalyList.appendChild(item);
+                } else {
+                    document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                    document.getElementById('anomalyStatusText').textContent = 'Normal Patterns Detected';
+                    document.getElementById('anomalyDescription').textContent = 'No unusual pollution patterns detected in the latest data.';
+                    document.getElementById('anomalyList').innerHTML = '<p class="text-sm text-gray-500">No anomalies detected</p>';
+                }
+            } catch (error) {
+                console.error('Error in anomaly detection:', error);
+                // Fallback to statistical approach
+                runStatisticalAnomalyDetection();
+            }
+        }
+        
+        // Statistical anomaly detection as fallback
+        function runStatisticalAnomalyDetection() {
+            if (historicalData.length < 5) {
+                document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-yellow-500 mr-2';
+                document.getElementById('anomalyStatusText').textContent = 'Insufficient Data';
+                document.getElementById('anomalyDescription').textContent = 'Need at least 5 data points for anomaly detection.';
+                document.getElementById('anomalyList').innerHTML = '<p class="text-sm text-gray-500">Collecting more data...</p>';
+                return;
+            }
+            
+            // Calculate mean and standard deviation for AQI
+            const aqiValues = historicalData.map(entry => entry.aqi);
+            const mean = aqiValues.reduce((sum, val) => sum + val, 0) / aqiValues.length;
+            const stdDev = Math.sqrt(aqiValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / aqiValues.length);
+            
+            // Check if the latest AQI is an outlier (more than 2 standard deviations from mean)
+            const latestAQI = historicalData[historicalData.length - 1].aqi;
+            const isAnomaly = Math.abs(latestAQI - mean) > 2 * stdDev;
+            
+            if (isAnomaly) {
+                document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-red-500 mr-2 anomaly-pulse';
+                document.getElementById('anomalyStatusText').textContent = 'Anomaly Detected';
+                document.getElementById('anomalyDescription').textContent = `Unusual pollution pattern detected. Current AQI (${latestAQI}) is significantly different from the recent average (${Math.round(mean)}).`;
+                
+                // Add to anomaly list
+                const anomalyList = document.getElementById('anomalyList');
+                const date = new Date(historicalData[historicalData.length - 1].timestamp);
+                const timeStr = date.toLocaleString();
+                
+                const item = document.createElement('div');
+                item.className = 'bg-red-50 rounded p-2 mb-2';
+                item.innerHTML = `
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">AQI: ${latestAQI}</span>
+                        <span class="text-xs text-gray-500">${timeStr}</span>
+                    </div>
+                    <div class="text-xs text-gray-600">Deviation: ${Math.abs(latestAQI - mean).toFixed(1)} from average</div>
+                `;
+                
+                // Clear previous content and add new item
+                anomalyList.innerHTML = '';
+                anomalyList.appendChild(item);
+            } else {
+                document.getElementById('anomalyIndicator').className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
+                document.getElementById('anomalyStatusText').textContent = 'Normal Patterns Detected';
+                document.getElementById('anomalyDescription').textContent = 'No unusual pollution patterns detected in the latest data.';
+                document.getElementById('anomalyList').innerHTML = '<p class="text-sm text-gray-500">No anomalies detected</p>';
+            }
+        }
+        
+        // Run pollution source prediction
+        function runSourcePrediction() {
+            // Get current AQI values
+            const aqi = parseInt(document.getElementById('aqiValue').textContent) || 0;
+            const pm25 = parseFloat(document.getElementById('pm25Value').textContent) || 0;
+            const no2 = parseFloat(document.getElementById('no2Value').textContent) || 0;
+            const o3 = parseFloat(document.getElementById('o3Value').textContent) || 0;
+            
+            // Show loading state
+            document.getElementById('trafficPercent').textContent = 'Analyzing...';
+            document.getElementById('trafficBar').style.width = '0%';
+            document.getElementById('industrialPercent').textContent = 'Analyzing...';
+            document.getElementById('industrialBar').style.width = '0%';
+            document.getElementById('residentialPercent').textContent = 'Analyzing...';
+            document.getElementById('residentialBar').style.width = '0%';
+            document.getElementById('naturalPercent').textContent = 'Analyzing...';
+            document.getElementById('naturalBar').style.width = '0%';
+            
+            // Simple heuristic model to predict pollution sources
+            // In a real application, this would use a trained ML model
+            
+            let traffic = 0;
+            let industrial = 0;
+            let residential = 0;
+            let natural = 0;
+            
+            // Traffic pollution is characterized by high NO2
+            if (no2 > 30) {
+                traffic = Math.min(80, 20 + (no2 - 30) * 2);
+            }
+            
+            // Industrial pollution is characterized by high PM2.5 and NO2
+            if (pm25 > 50 && no2 > 20) {
+                industrial = Math.min(70, 15 + (pm25 - 50) * 1.5 + (no2 - 20) * 1);
+            }
+            
+            // Residential pollution is characterized by moderate PM2.5 and lower NO2
+            if (pm25 > 20 && pm25 < 50 && no2 < 30) {
+                residential = Math.min(60, 20 + (pm25 - 20) * 1.3);
+            }
+            
+            // Natural pollution is characterized by high O3 and lower PM2.5
+            if (o3 > 50 && pm25 < 30) {
+                natural = Math.min(50, 15 + (o3 - 50) * 1);
+            }
+            
+            // Normalize to percentages
+            const total = traffic + industrial + residential + natural;
+            if (total > 0) {
+                traffic = Math.round((traffic / total) * 100);
+                industrial = Math.round((industrial / total) * 100);
+                residential = Math.round((residential / total) * 100);
+                natural = Math.round((natural / total) * 100);
+                
+                // Adjust to ensure total is 100%
+                const diff = 100 - (traffic + industrial + residential + natural);
+                if (diff !== 0) {
+                    traffic += diff;
+                }
+            } else {
+                // Default values if no clear pattern
+                traffic = 40;
+                industrial = 30;
+                residential = 20;
+                natural = 10;
+            }
+            
+            // Update UI with animation
+            setTimeout(() => {
+                document.getElementById('trafficPercent').textContent = traffic + '%';
+                document.getElementById('trafficBar').style.width = traffic + '%';
+                
+                document.getElementById('industrialPercent').textContent = industrial + '%';
+                document.getElementById('industrialBar').style.width = industrial + '%';
+                
+                document.getElementById('residentialPercent').textContent = residential + '%';
+                document.getElementById('residentialBar').style.width = residential + '%';
+                
+                document.getElementById('naturalPercent').textContent = natural + '%';
+                document.getElementById('naturalBar').style.width = natural + '%';
+                
+                // Update source analysis text
+                let analysisText = '';
+                if (traffic > 50) {
+                    analysisText = 'High traffic pollution detected. Consider avoiding rush hours and using public transport.';
+                } else if (industrial > 50) {
+                    analysisText = 'Industrial pollution is the main contributor. Check for nearby factories or industrial zones.';
+                } else if (residential > 50) {
+                    analysisText = 'Residential pollution is significant. Consider reducing indoor pollution sources like cooking smoke.';
+                } else if (natural > 50) {
+                    analysisText = 'Natural sources are the main contributor. This may include pollen, dust, or wildfires.';
+                } else {
+                    analysisText = 'Mixed pollution sources detected. Multiple factors are contributing to the current air quality.';
+                }
+                
+                document.getElementById('sourceAnalysis').textContent = analysisText;
+            }, 100);
+        }
+        
+        // Generate personalized health recommendations
+        function generateHealthRecommendations() {
+            const aqi = parseInt(document.getElementById('aqiValue').textContent) || 0;
+            
+            // Get health profile
+            const hasRespiratory = document.getElementById('respiratory').checked;
+            const hasCardiovascular = document.getElementById('cardiovascular').checked;
+            const isElderly = document.getElementById('elderly').checked;
+            const hasChildren = document.getElementById('children').checked;
+            const isPregnant = document.getElementById('pregnant').checked;
+            
+            // Generate recommendations based on AQI and health profile
+            let recommendations = [];
+            let riskLevel = 'Low';
+            let riskColor = 'bg-green-100 text-green-800';
+            
+            if (aqi <= 50) {
+                recommendations.push("Air quality is good. Enjoy outdoor activities!");
+                riskLevel = 'Low';
+                riskColor = 'bg-green-100 text-green-800';
+            } else if (aqi <= 100) {
+                recommendations.push("Air quality is moderate. Most people can enjoy outdoor activities.");
+                riskLevel = 'Moderate';
+                riskColor = 'bg-yellow-100 text-yellow-800';
+                
+                if (hasRespiratory || hasCardiovascular) {
+                    recommendations.push("Consider reducing prolonged outdoor exertion if you experience symptoms.");
+                }
+            } else if (aqi <= 150) {
+                recommendations.push("Air quality is unhealthy for sensitive groups.");
+                riskLevel = 'High';
+                riskColor = 'bg-orange-100 text-orange-800';
+                
+                if (hasRespiratory || hasCardiovascular || isElderly || hasChildren || isPregnant) {
+                    recommendations.push("Limit prolonged outdoor exertion.");
+                    recommendations.push("Consider wearing a mask when outdoors.");
+                } else {
+                    recommendations.push("Sensitive individuals should limit prolonged outdoor exertion.");
+                }
+            } else if (aqi <= 200) {
+                recommendations.push("Air quality is unhealthy for everyone.");
+                recommendations.push("Avoid prolonged outdoor exertion.");
+                recommendations.push("Consider wearing a mask when outdoors.");
+                riskLevel = 'Very High';
+                riskColor = 'bg-red-100 text-red-800';
+                
+                if (hasRespiratory || hasCardiovascular || isElderly || hasChildren || isPregnant) {
+                    recommendations.push("Stay indoors as much as possible.");
+                    recommendations.push("Keep windows closed and use air purifiers.");
+                }
+            } else {
+                recommendations.push("Air quality is very unhealthy or hazardous.");
+                recommendations.push("Avoid all outdoor activities.");
+                recommendations.push("Stay indoors with windows closed.");
+                recommendations.push("Use air purifiers if available.");
+                recommendations.push("Wear N95 masks if you must go outside.");
+                riskLevel = 'Hazardous';
+                riskColor = 'bg-purple-100 text-purple-800';
+            }
+            
+            // Add specific recommendations based on health profile
+            if (hasRespiratory) {
+                recommendations.push("Keep rescue inhalers readily available.");
+                recommendations.push("Follow your doctor's action plan for asthma or COPD.");
+            }
+            
+            if (hasCardiovascular) {
+                recommendations.push("Monitor for chest pain, palpitations, or shortness of breath.");
+                recommendations.push("Keep medications readily available.");
+            }
+            
+            if (isElderly) {
+                recommendations.push("Stay hydrated and avoid extreme temperatures.");
+                recommendations.push("Check in with family or neighbors regularly.");
+            }
+            
+            if (hasChildren) {
+                recommendations.push("Limit children's outdoor playtime.");
+                recommendations.push("Ensure children drink plenty of water.");
+                recommendations.push("Watch for respiratory symptoms in children.");
+            }
+            
+            if (isPregnant) {
+                recommendations.push("Avoid outdoor activities during high pollution hours.");
+                recommendations.push("Discuss any concerns with your healthcare provider.");
+            }
+            
+            // Update UI
+            const recommendationsDiv = document.getElementById('healthRecommendations');
+            recommendationsDiv.innerHTML = '';
+            
+            const ul = document.createElement('ul');
+            ul.className = 'space-y-2';
+            
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                li.innerHTML = `<i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span class="text-sm">${rec}</span>`;
+                ul.appendChild(li);
+            });
+            
+            recommendationsDiv.appendChild(ul);
+            
+            // Update risk level
+            const riskLevelEl = document.getElementById('riskLevel');
+            riskLevelEl.textContent = riskLevel;
+            riskLevelEl.className = `px-2 py-1 rounded text-xs font-medium ${riskColor}`;
+            
+            // Update risk assessment
+            let riskAssessment = '';
+            if (aqi <= 50) {
+                riskAssessment = 'Current air quality poses minimal health risks for most people.';
+            } else if (aqi <= 100) {
+                riskAssessment = 'People with respiratory or heart conditions may experience minor health effects.';
+            } else if (aqi <= 150) {
+                riskAssessment = 'Sensitive groups may experience serious health effects. General public may experience minor effects.';
+            } else if (aqi <= 200) {
+                riskAssessment = 'Everyone may experience serious health effects. Sensitive groups should avoid outdoor activities.';
+            } else {
+                riskAssessment = 'Emergency conditions. Everyone is likely to be affected. Avoid all outdoor activities.';
+            }
+            
+            document.getElementById('riskAssessment').textContent = riskAssessment;
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize map
             initMap();
             
+            // Initialize forecast chart
             const ctx = document.getElementById('forecastChart').getContext('2d');
             forecastChart = new Chart(ctx, {
                 type: 'line',
@@ -1029,6 +2259,10 @@
                 }
             });
             
+            // Load historical data
+            loadHistoricalData();
+            
+            // Get user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
@@ -1037,13 +2271,16 @@
                         fetchAirQualityByCoords(lat, lon);
                     },
                     error => {
+                        // If geolocation fails, fetch data for a default location
                         fetchAirQualityByCity('Delhi');
                     }
                 );
             } else {
+                // If geolocation is not supported, fetch data for a default location
                 fetchAirQualityByCity('Delhi');
             }
             
+            // Add event listener for Enter key in search box
             document.getElementById('cityInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     updateDashboard();
@@ -1052,5 +2289,4 @@
         });
     </script>
 </body>
-
 </html>
